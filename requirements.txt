@@ -1,0 +1,4 @@
+keyring
+pandas
+pyodbc
+requests
