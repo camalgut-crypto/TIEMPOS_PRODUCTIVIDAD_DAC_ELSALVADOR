@@ -17,6 +17,7 @@ Enlace: https://camalgut-crypto.github.io/TIEMPOS_PRODUCTIVIDAD_DAC_ELSALVADOR/
 - **Motor y Flujo Rápido**: el motor no aprueba. Es del motor lo `RECHAZADO POR MOTOR` o `PRECALIFICADO MOTOR` que no llegó a un analista, y la solicitud termina ahí. Su tiempo se mide de `PRE ANALISIS` a la primera respuesta del motor; un rechazo que llega días después de precalificar no cuenta como tiempo.
 - **`PRECALIFICADO MOTOR` con analista**: productividad y tiempo son del analista, y el tiempo empieza en ANALISTA ASIGNADO.
 - **Productividad**: una sola del departamento (solicitudes ÷ días disponibles de los analistas) y una por analista, porque todos atienden todos los productos. Capacidad instalada usa la misma.
+- **`RECHAZADO`**: cuenta como decisión del analista y cierra su tramo.
 - **Gerencia**: registra resoluciones pero no es analista; su tiempo no se le cuenta y los tramos no quedan a su nombre.
 - **Sin preaprobado condicionado**: ese estado no existe en El Salvador; el menú está oculto. PENDIENTES queda con el mismo analista y su tiempo no se le cuenta.
 
