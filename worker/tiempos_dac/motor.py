@@ -11,7 +11,7 @@ Reglas (definidas por el usuario, aplicadas literalmente):
 - Mes de tiempos y productividad (26-oct): sin corte de mes; la solicitud se cuenta completa en el mes de su última
   decisión. Sin decisión, en el último mes en que tuvo un estado del DAC (si hoy está en uno, en el mes en curso).
   Los ingresos siguen contándose por la fecha de ingreso al DAC.
-- Producto: PYMES; todo lo demás es PERS (sin motos en El Salvador por el momento). Reestructura: Monto Colocado 0 o 1 (desde el 29-oct también se
+- Producto: PYME (PYME o PYMES en el sistema); todo lo demás es PERS (sin motos en El Salvador por el momento). Reestructura: Monto Colocado 0 o 1 (desde el 29-oct también se
   les miden tiempos, con la meta de su producto; cuentan para productividad).
 """
 from __future__ import annotations
@@ -26,7 +26,8 @@ EN_ANALISIS = "EN ANALISIS"
 PENDIENTES = "PENDIENTES"
 PRE_ANALISIS = "PRE ANALISIS"
 PREAPROBADO = "PREAPROBADO CONDICIONADO"
-MOTOR = {"APROBADO POR MOTOR", "RECHAZADO POR MOTOR"}
+# En El Salvador el motor aprueba con PRECALIFICADO MOTOR; no existen APROBADO POR MOTOR ni ENVIADO
+MOTOR = {"PRECALIFICADO MOTOR", "RECHAZADO POR MOTOR"}
 # Decisiones que cierran el ciclo del analista (RECHAZADO POR RECEPCION / RESOLUCION: indicado por el usuario 22-oct)
 DECISION = {"APROBADO POR ANALISTA", "RECHAZADO POR ANALISTA", "RECHAZADO POR RECEPCION", "RECHAZADO RESOLUCION"}
 
@@ -41,7 +42,7 @@ def es_fin_analisis(estado: str) -> bool:
 
 def producto(tipo_credito: str) -> str:
     t = (tipo_credito or "").strip().upper()
-    return t if t == "PYMES" else "PERS"
+    return "PYME" if t in ("PYME", "PYMES") else "PERS"
 
 
 class Jornada:
@@ -180,7 +181,7 @@ DEPTO_ESTADO = {
                      "RECHAZADO POR ANALISTA", "RECHAZADO POR RECEPCION", "RECHAZADO RESOLUCION",
                      "RESOLUCION APROBADA", "REVISADO", "REVISION APROBADOR", "VERIFICADOR MOTORIZADO"], "DAC"),
     **dict.fromkeys(["APROBADO ASALARIADO", "DEVUELTO GERENCIA", "EN ESTUDIO", "ENVIADO", "FORMALIZADO", "PENDIENTES",
-                     "PRE ANALISIS", "RECHAZADO POR ASESOR", "APROBADO POR MOTOR", "RECHAZADO POR MOTOR"], "COMERCIAL"),
+                     "PRE ANALISIS", "RECHAZADO POR ASESOR", "PRECALIFICADO MOTOR", "RECHAZADO POR MOTOR"], "COMERCIAL"),
 }
 # Quien registra alguno de estos estados es personal del DAC (analistas, jefatura, auditores)
 ESTADOS_DE_PERSONAL_DAC = {"ANALISTA ASIGNADO", "EN ANALISIS", "APROBADO POR ANALISTA", "RECHAZADO POR ANALISTA",
@@ -289,12 +290,12 @@ def calcular(historico: pd.DataFrame, bitacora: pd.DataFrame,
 
 
 def _resolucion_motor(g: pd.DataFrame):
-    """(índice de la resolución del motor, segundos desde ENVIADO) o (None, None)."""
+    """(índice de la resolución del motor, segundos desde el último PRE ANALISIS anterior) o (None, None)."""
     est = g["estado"].tolist()
     i = next((k for k, e in enumerate(est) if e in MOTOR), None)
     if i is None:
         return None, None
-    j = next((k for k, e in enumerate(est[:i]) if e == "ENVIADO"), 0)
+    j = next((k for k in range(i - 1, -1, -1) if est[k] == PRE_ANALISIS), 0)
     return i, (g["t"].iloc[i] - g["t"].iloc[j]).total_seconds()
 
 
@@ -337,7 +338,7 @@ LIMITE_MOTOR = 60  # el motor no debe tardar más de 1 minuto en resolver
 
 
 def tiempos_motor(historico: pd.DataFrame, bitacora: pd.DataFrame, dac: set[int], rapido: set[int]):
-    """Tiempo del motor (de ENVIADO a APROBADO / RECHAZADO POR MOTOR) de todas las solicitudes que resolvió.
+    """Tiempo del motor (de PRE ANALISIS a PRECALIFICADO / RECHAZADO POR MOTOR) de todas las solicitudes que resolvió.
     Devuelve (resumen por día, producto, resolución y camino; solicitudes que pasaron de 1 minuto)."""
     h = _historico(historico)
     info = _info(bitacora)

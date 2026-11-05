@@ -10,9 +10,12 @@ Enlace: https://camalgut-crypto.github.io/TIEMPOS_PRODUCTIVIDAD_DAC_ELSALVADOR/
 - **Datos**: mismo proyecto de Supabase, esquema propio `dac_sv`. Usuarios (`@tiemposdac-sv.local`) y sesión también van aparte.
 - **Consultas**: país 4. El histórico toma desde enero de 2026 hasta el mes anterior; la consulta mensual, el mes en curso y el anterior, para seguir actualizando las solicitudes que se resuelven después de un cambio de mes.
 - **Jornada**: L-V 8:00–18:00 y sábado 8:00–12:00. El sábado sigue valiendo 0.5 día hábil.
-- **Metas**: PERS (asalariado) ≤ 30 min, PYMES ≤ 50 min.
-- **Productos**: PYMES; todo lo demás es PERS. No hay motos por el momento; para agregarlas hay que devolver MOTO a `PRODUCTOS` (`public/calculos.js`) y a `producto()` (`worker/tiempos_dac/motor.py`).
+- **Metas**: PERS ≤ 30 min, PYME ≤ 50 min.
+- **Productos**: PYME (`PYME` o `PYMES` en el sistema); todo lo demás es PERS: ASALARIADO, NO ASALARIADO y PERSONAL. No hay motos por el momento; para agregarlas hay que devolver MOTO a `PRODUCTOS` (`public/calculos.js`) y a `producto()` (`worker/tiempos_dac/motor.py`).
 - **Feriados**: los de El Salvador, inamovibles: si caen domingo no se reponen. Se administran en Vacaciones y calendario.
+
+- **Motor**: `PRE ANALISIS` hace de ENVIADO y `PRECALIFICADO MOTOR` de aprobado por motor.
+- **Sin preaprobado condicionado**: ese estado no existe en El Salvador; el menú está oculto. PENDIENTES queda con el mismo analista y su tiempo no se le cuenta.
 
 Las demás reglas de cálculo son las de la herramienta de Nicaragua y están en `worker/tiempos_dac/motor.py` y `public/calculos.js`.
 

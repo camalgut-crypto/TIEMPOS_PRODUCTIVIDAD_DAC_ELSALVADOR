@@ -1,9 +1,9 @@
 // Cálculos de Tiempos DAC: calendario hábil de El Salvador, disponibilidad, productividad y tiempos.
 // Todo se calcula en el navegador a partir de las solicitudes y tramos que carga el proceso de actualización.
 (function () {
-  const PRODUCTOS = ['PERS', 'PYMES']; // sin motos en El Salvador por el momento
+  const PRODUCTOS = ['PERS', 'PYME']; // sin motos en El Salvador por el momento
   const RANGOS = [1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 90, 240];
-  const METAS = { PERS: 30, PYMES: 50 }; // minutos; se cambian en Administración
+  const METAS = { PERS: 30, PYME: 50 }; // minutos; se cambian en Administración
 
   const slug = (s) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
     .trim().replace(/[^a-z0-9]+/g, '.').replace(/^\.|\.$/g, '');
@@ -240,7 +240,7 @@
     for (const r of RANGOS) if (m <= r) return r;
     return Infinity;
   }
-  // lista: segundos o {s, p} (p = producto, para medir contra su meta). metas: minutos o {PERS, PYMES}
+  // lista: segundos o {s, p} (p = producto, para medir contra su meta). metas: minutos o {PERS, PYME}
   function resumenTiempos(lista, metas) {
     const it = lista.map((x) => (x == null || typeof x === 'number' ? { s: x } : x)).filter((x) => x.s != null).sort((a, b) => a.s - b.s);
     const v = it.map((x) => x.s);

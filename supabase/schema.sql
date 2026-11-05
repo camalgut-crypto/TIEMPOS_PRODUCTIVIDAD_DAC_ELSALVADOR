@@ -28,7 +28,7 @@ create table if not exists dac_sv.dac_solicitudes (
   creada timestamp,
   ingreso_dac timestamp not null,
   tipo_credito text,
-  producto text not null check (producto in ('PYMES','MOTO','PERS')),
+  producto text not null check (producto in ('PYME','PERS')),
   reestructura boolean not null default false,
   monto_colocado numeric,
   estado_actual text,
@@ -58,7 +58,7 @@ create index if not exists ix_dac_tramos_analista on dac_sv.dac_tramos (analista
 -- ---------- Lo que se registra en la app ----------
 create table if not exists dac_sv.dac_analistas (
   nombre text primary key,               -- tal como aparece en el histórico (USUARIO MODIFICA)
-  producto text not null check (producto in ('PYMES','MOTO','PERS')),
+  producto text not null check (producto in ('PYME','PERS')),
   activo boolean not null default true,
   desde date,
   hasta date
@@ -321,7 +321,7 @@ end $$;
 
 -- Metas por producto (minutos) y jefatura del DAC (no es Flujo Rápido si interviene)
 insert into dac_sv.dac_config (clave, valor) values
-  ('metas', '{"PERS": 30, "PYMES": 50}'),
+  ('metas', '{"PERS": 30, "PYME": 50}'),
   ('jefatura', '["KATHERINE GISSELL MORA GARCIA"]')
 on conflict (clave) do nothing;
 
