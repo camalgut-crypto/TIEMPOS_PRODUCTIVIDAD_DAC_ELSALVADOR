@@ -190,7 +190,7 @@
       porProducto[p] = { n, analistas: null, disp: dispTotal, equiv: null, prod: null, porDia: dh ? n / dh : null };
     }
     const depto = { n: sols.length, reestructuras: sols.filter((s) => s.reestructura).length, diasHabiles: dh,
-      diasMes: C.diasHabilesTotales(desde, hasta), analistas: C.analistas.length, disp: dispTotal,
+      diasMes: C.diasHabilesTotales(desde, hasta), analistas: C.analistas.filter((a) => (!a.desde || a.desde <= hasta) && (!a.hasta || a.hasta >= desde)).length, disp: dispTotal,
       equiv: dh ? dispTotal / dh : 0, porDia: dh ? sols.length / dh : null, prod: null, peso: {} };
     // Productividad del departamento: solicitudes ÷ días disponibles de los analistas
     for (const p of PRODUCTOS) depto.peso[p] = sols.length ? porProducto[p].n / sols.length : 0;
@@ -212,6 +212,8 @@
     // solo por el reprocesamiento del preaprobado condicionado. Cada una ÷ sus días disponibles (indicado por el usuario 23-oct).
     const porAnalista = [];
     for (const a of C.analistas) {
+      // Un analista temporal solo aparece en los períodos en que trabajó
+      if (!part.has(a.nombre) && ((a.desde && a.desde > hasta) || (a.hasta && a.hasta < desde))) continue;
       const p = part.get(a.nombre) || { sols: new Set(), propio: new Set(), otros: new Set(), reproceso: new Set(), analisis: new Set() };
       const disp = C.disponibilidad(a.nombre, desde, hasta, true);
       const soloRe = new Set([...p.reproceso].filter((id) => !p.analisis.has(id)));

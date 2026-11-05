@@ -14,8 +14,8 @@ Enlace: https://camalgut-crypto.github.io/TIEMPOS_PRODUCTIVIDAD_DAC_ELSALVADOR/
 - **Productos**: PYME (`PYME` o `PYMES` en el sistema); todo lo demás es PERS: ASALARIADO, NO ASALARIADO y PERSONAL. No hay motos por el momento; para agregarlas hay que devolver MOTO a `PRODUCTOS` (`public/calculos.js`) y a `producto()` (`worker/tiempos_dac/motor.py`).
 - **Feriados**: solo los nacionales de El Salvador, inamovibles: si caen domingo no se reponen. Se administran en Vacaciones y calendario.
 
-- **Motor y Flujo Rápido**: el motor solo rechaza; su tiempo se mide de `PRE ANALISIS` a `RECHAZADO POR MOTOR`. Es del motor lo rechazado en que no intervino un analista.
-- **`PRECALIFICADO MOTOR`**: no es una resolución. Si llega al analista, productividad y tiempo son suyos, y el tiempo empieza en ANALISTA ASIGNADO. Si no llega, no cuenta para nadie.
+- **Motor y Flujo Rápido**: el motor no aprueba. Es del motor lo `RECHAZADO POR MOTOR` o `PRECALIFICADO MOTOR` que no llegó a un analista, y la solicitud termina ahí. Su tiempo se mide de `PRE ANALISIS` a la primera respuesta del motor; un rechazo que llega días después de precalificar no cuenta como tiempo.
+- **`PRECALIFICADO MOTOR` con analista**: productividad y tiempo son del analista, y el tiempo empieza en ANALISTA ASIGNADO.
 - **Productividad**: una sola del departamento (solicitudes ÷ días disponibles de los analistas) y una por analista, porque todos atienden todos los productos. Capacidad instalada usa la misma.
 - **Gerencia**: registra resoluciones pero no es analista; su tiempo no se le cuenta y los tramos no quedan a su nombre.
 - **Sin preaprobado condicionado**: ese estado no existe en El Salvador; el menú está oculto. PENDIENTES queda con el mismo analista y su tiempo no se le cuenta.

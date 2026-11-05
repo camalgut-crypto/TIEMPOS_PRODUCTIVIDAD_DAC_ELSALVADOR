@@ -26,9 +26,11 @@ EN_ANALISIS = "EN ANALISIS"
 PENDIENTES = "PENDIENTES"
 PRE_ANALISIS = "PRE ANALISIS"
 PREAPROBADO = "PREAPROBADO CONDICIONADO"
-# En El Salvador el motor solo rechaza. PRECALIFICADO MOTOR no es una resolución: la solicitud sigue hacia el analista,
-# y su productividad y tiempo (desde ANALISTA ASIGNADO) son del analista. No existen APROBADO POR MOTOR ni ENVIADO.
-MOTOR = {"RECHAZADO POR MOTOR"}
+# En El Salvador el motor no aprueba y no existen APROBADO POR MOTOR ni ENVIADO. Lo que llega al analista desde
+# PRECALIFICADO MOTOR es del analista (su tiempo inicia en ANALISTA ASIGNADO). Lo que no llega es del motor, y la
+# solicitud termina ahí, igual que lo rechazado por motor en que no intervino un analista (indicado por el usuario 5-nov).
+PRECALIFICADO = "PRECALIFICADO MOTOR"
+MOTOR = {PRECALIFICADO, "RECHAZADO POR MOTOR"}
 # Decisiones que cierran el ciclo del analista (RECHAZADO POR RECEPCION / RESOLUCION: indicado por el usuario 22-oct)
 DECISION = {"APROBADO POR ANALISTA", "RECHAZADO POR ANALISTA", "RECHAZADO POR RECEPCION", "RECHAZADO RESOLUCION"}
 
@@ -193,7 +195,7 @@ ESTADOS_DE_PERSONAL_DAC = {"ANALISTA ASIGNADO", "EN ANALISIS", "APROBADO POR ANA
 def es_final(estado: str) -> bool:
     """La solicitud terminó su ciclo de cara al cliente: formalizada (lo posterior, como revisado, expedientes y
     auditado, ya no cuenta; indicado por el usuario 23-oct), rechazada, TUD, anulada, vencida o creada con nuevo ID."""
-    return (estado in ("FORMALIZADO", "AUDITADO", "ANULADO", "VENCIDO") or estado.startswith("RECHAZADO")
+    return (estado in ("FORMALIZADO", "AUDITADO", "ANULADO", "VENCIDO", PRECALIFICADO) or estado.startswith("RECHAZADO")
             or es_tud(estado) or estado.startswith("CREACI"))
 
 
@@ -292,7 +294,8 @@ def calcular(historico: pd.DataFrame, bitacora: pd.DataFrame,
 
 
 def _resolucion_motor(g: pd.DataFrame):
-    """(índice de la resolución del motor, segundos desde el último PRE ANALISIS anterior) o (None, None)."""
+    """(índice de la primera respuesta del motor, segundos desde el último PRE ANALISIS anterior) o (None, None).
+    Se mide hasta la primera respuesta: un rechazo que llega días después de precalificar no es tiempo del motor."""
     est = g["estado"].tolist()
     i = next((k for k, e in enumerate(est) if e in MOTOR), None)
     if i is None:
@@ -301,9 +304,14 @@ def _resolucion_motor(g: pd.DataFrame):
     return i, (g["t"].iloc[i] - g["t"].iloc[j]).total_seconds()
 
 
+def _resolucion(g: pd.DataFrame) -> str:
+    """Última respuesta del motor: una solicitud precalificada y rechazada después queda como rechazada."""
+    return [e for e in g["estado"] if e in MOTOR][-1]
+
+
 def flujo_rapido(historico: pd.DataFrame, bitacora: pd.DataFrame, jornada: Jornada | None = None,
                  ahora: datetime | None = None, personal: set[str] | None = None) -> pd.DataFrame:
-    """Flujo Rápido (motor de decisiones): toda solicitud RECHAZADO POR MOTOR
+    """Flujo Rápido (motor de decisiones): toda solicitud RECHAZADO POR MOTOR o PRECALIFICADO MOTOR
     que no pasó por POR ASIGNAR A ANALISTA, haya seguido o no a otro estado (indicado por el usuario 29-oct; antes
     se exigía un estado posterior). Es del motor aunque la jefatura haya intervenido (indicado por el usuario 23-oct);
     no cuenta en los tiempos ni en la productividad del DAC."""
@@ -325,7 +333,7 @@ def flujo_rapido(historico: pd.DataFrame, bitacora: pd.DataFrame, jornada: Jorna
         creada = g["creada"].iloc[0]
         out.append({
             "solicitud": int(sol), "periodo": creada.strftime("%Y-%m"), "creada": creada,
-            "resolucion": est[i], "fecha_resolucion": g["t"].iloc[i],
+            "resolucion": _resolucion(g), "fecha_resolucion": g["t"].iloc[i],
             "tipo_credito": tc.strip().upper() or None, "producto": producto(tc),
             "monto_aprobado": _num(i_["monto_aprobado"]) if i_ is not None else None,
             "estado_actual": i_["estado_actual"] if i_ is not None else None,
@@ -340,7 +348,7 @@ LIMITE_MOTOR = 60  # el motor no debe tardar más de 1 minuto en resolver
 
 
 def tiempos_motor(historico: pd.DataFrame, bitacora: pd.DataFrame, dac: set[int], rapido: set[int]):
-    """Tiempo del motor (de PRE ANALISIS a RECHAZADO POR MOTOR) de todas las solicitudes que resolvió.
+    """Tiempo del motor (de PRE ANALISIS a su primera respuesta) de todas las solicitudes que resolvió.
     Devuelve (resumen por día, producto, resolución y camino; solicitudes que pasaron de 1 minuto)."""
     h = _historico(historico)
     info = _info(bitacora)
@@ -349,10 +357,12 @@ def tiempos_motor(historico: pd.DataFrame, bitacora: pd.DataFrame, dac: set[int]
         i, seg = _resolucion_motor(g)
         if i is None:
             continue
+        if sol in dac and _resolucion(g) == PRECALIFICADO:  # llegó al analista: no es del motor
+            continue
         tc = info.loc[sol, "tipo_credito"] if sol in info.index else ""
         filas.append({"solicitud": int(sol), "periodo": g["creada"].iloc[0].strftime("%Y-%m"),
                       "fecha": g["t"].iloc[i].date().isoformat(), "fecha_resolucion": g["t"].iloc[i],
-                      "creada": g["creada"].iloc[0], "producto": producto(tc or ""), "resolucion": g["estado"].iloc[i],
+                      "creada": g["creada"].iloc[0], "producto": producto(tc or ""), "resolucion": _resolucion(g),
                       "camino": "dac" if sol in dac else "rapido" if sol in rapido else "otro", "segundos": seg})
     m = pd.DataFrame(filas, columns=["solicitud", "periodo", "fecha", "fecha_resolucion", "creada", "producto",
                                      "resolucion", "camino", "segundos"])

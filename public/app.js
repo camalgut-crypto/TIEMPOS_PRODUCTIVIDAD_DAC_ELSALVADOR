@@ -346,7 +346,7 @@
         <div class="kpi cielo"><div class="l">Tiempo de la solicitud</div><div class="v">${dur(T.mediana)}</div><div class="s">mediana · promedio ${dur(T.prom)}</div></div>
         <div class="kpi lima"><div class="l">Dentro de la meta</div><div class="v">${pct(T.enMeta)}</div><div class="s">${metaTxt()} · ${n0(T.n)} solicitudes</div></div>
         <div class="kpi naranja"><div class="l">Preaprobado condicionado</div><div class="v">${n0(R.n)}</div><div class="s">solicitudes reprocesadas · mediana en análisis ${dur(R.mediana)}</div></div>
-        <div class="kpi blanco"><div class="l">Flujo Rápido (motor)</div><div class="v">${n0(fr.length)}</div><div class="s">rechazadas por el motor sin pasar por un analista</div></div>
+        <div class="kpi blanco"><div class="l">Flujo Rápido (motor)</div><div class="v">${n0(fr.length)}</div><div class="s">precalificadas o rechazadas por motor, sin llegar a un analista</div></div>
       </div>
       <div class="grid g2" style="margin-bottom:14px">${DAC.PRODUCTOS.map((p) => { const x = M.porProducto[p], Tp = DAC.resumenTiempos(casos.filter((c) => c.p === p), metas()); return `
         <div class="card"><h3>${prodTag(p)}</h3>
@@ -574,17 +574,17 @@
     return `${filtros({ tipo: false })}
       ${sinDatos ? '<div class="card nota alerta">Los tiempos del motor se llenan con la próxima actualización.</div>' : ''}
       <div class="kpis">
-        <div class="kpi"><div class="l">Resoluciones del motor</div><div class="v">${n0(T.n)}</div><div class="s">rechazadas por motor · ${mesTxt(S.mes)}</div></div>
+        <div class="kpi"><div class="l">Resoluciones del motor</div><div class="v">${n0(T.n)}</div><div class="s">precalificadas o rechazadas · ${mesTxt(S.mes)}</div></div>
         <div class="kpi ${T.dentro == null || T.dentro >= 0.999 ? 'verde' : 'naranja'}"><div class="l">Dentro de 1 minuto</div><div class="v">${pct(T.dentro)}</div><div class="s">${n0(T.b[4])} tardaron más de 1 min</div></div>
         <div class="kpi cielo"><div class="l">Tiempo promedio</div><div class="v">${segs(T.prom)}</div><div class="s">de PRE ANALISIS a la resolución · máximo ${segs(T.max)}</div></div>
-        <div class="kpi blanco"><div class="l">Flujo Rápido</div><div class="v">${n0(fr.length)}</div><div class="s">rechazadas por el motor sin pasar por un analista</div></div>
+        <div class="kpi blanco"><div class="l">Flujo Rápido</div><div class="v">${n0(fr.length)}</div><div class="s">precalificadas o rechazadas por motor, sin llegar a un analista</div></div>
       </div>
-      <div class="card"><h3>Tiempo promedio del motor por día</h3><p class="muted small" style="margin-top:-4px">Segundos de PRE ANALISIS a RECHAZADO POR MOTOR. Meta: menos de 1 minuto. No cuenta en los tiempos ni en la productividad del DAC.</p>
+      <div class="card"><h3>Tiempo promedio del motor por día</h3><p class="muted small" style="margin-top:-4px">Segundos de PRE ANALISIS a la primera respuesta del motor. Meta: menos de 1 minuto. No cuenta en los tiempos ni en la productividad del DAC.</p>
         ${GRAF.columnas(dias, { fmt: (v) => `${(+v).toFixed(1)}`, color: 'var(--navy)' })}</div>
       <div class="grid g2" style="margin-top:14px">
         <div class="card"><h3>Por camino</h3><div class="tabla"><table><thead>${cab}</thead><tbody>
           ${Object.entries(CAMINO).filter(([k]) => k !== 'otro' || MR.some((r) => r.camino === k)).map(([k, t]) => filaM(t, MR.filter((r) => r.camino === k))).join('')}
-          ${['RECHAZADO POR MOTOR'].map((e) => filaM(titulo(e), MR.filter((r) => r.resolucion === e))).join('')}</tbody></table></div></div>
+          ${['PRECALIFICADO MOTOR', 'RECHAZADO POR MOTOR'].map((e) => filaM(titulo(e), MR.filter((r) => r.resolucion === e))).join('')}</tbody></table></div></div>
         <div class="card"><h3>Por producto</h3><div class="tabla"><table><thead>${cab}</thead><tbody>
           ${DAC.PRODUCTOS.map((p) => filaM(prodTag(p), MR.filter((r) => r.producto === p))).join('')}</tbody></table></div></div>
       </div>
@@ -593,8 +593,8 @@
           ${lentas.sort((a, b) => b.segundos - a.segundos).map((x) => `<tr><td>${x.solicitud}</td><td>${prodTag(x.producto)}</td><td>${esc(x.resolucion)}</td><td>${CAMINO[x.camino] || ''}</td><td>${fh(x.fecha_resolucion)}</td><td class="num"><b>${segs(Number(x.segundos))}</b></td></tr>`).join('')}</tbody></table></div>`
           : '<p class="muted">Ninguna resolución del motor pasó de 1 minuto en el mes.</p>'}</div>
       <div class="card"><h3>Flujo Rápido · ${mesTxt(S.mes)}</h3>
-        <p class="muted small">Todas las solicitudes con RECHAZADO POR MOTOR que no pasaron por POR ASIGNAR A ANALISTA, hayan seguido o no a otro estado (también si la jefatura las pasó a pre análisis). Clic en una cantidad para ver las solicitudes.</p>
-        <p>${['RECHAZADO POR MOTOR'].map((e) => { const l = fr.filter((x) => x.resolucion === e); return `${titulo(e)}: <b>${conLista(l.length, `Flujo Rápido · ${titulo(e)}`, l.map(filaFlujo))}</b>`; }).join(' · ')}
+        <p class="muted small">Todas las solicitudes con PRECALIFICADO o RECHAZADO POR MOTOR que no pasaron por POR ASIGNAR A ANALISTA: son del motor y ahí termina la solicitud. Clic en una cantidad para ver las solicitudes.</p>
+        <p>${['PRECALIFICADO MOTOR', 'RECHAZADO POR MOTOR'].map((e) => { const l = fr.filter((x) => x.resolucion === e); return `${titulo(e)}: <b>${conLista(l.length, `Flujo Rápido · ${titulo(e)}`, l.map(filaFlujo))}</b>`; }).join(' · ')}
           · Total: <b>${conLista(fr.length, 'Flujo Rápido', fr.map(filaFlujo))}</b></p>
         <div class="tabla"><table><thead><tr><th>Estado hoy</th><th class="num">Solicitudes</th><th class="num">%</th></tr></thead><tbody>
           ${[...porEstado].sort((a, b) => b[1].length - a[1].length).map(([e, l]) => `<tr><td>${esc(e)}</td><td class="num">${conLista(l.length, `Flujo Rápido · ${esc(e)}`, l.map(filaFlujo))}</td><td class="num">${pct(l.length / fr.length)}</td></tr>`).join('')}</tbody></table></div></div>`;
@@ -927,7 +927,7 @@
     const fila2 = (r, nom, cls = '') => `<tr class="${cls}"><td>${nom}</td><td class="num">${r.pct == null ? '—' : pct(r.pct)}</td><td class="num">${n2(r.montoMeta)}</td><td class="num">${n0(r.creditos)}</td><td class="num">${n0(r.solic)}</td><td class="num">${n2(r.porDia)}</td>
       <td class="num"><b>${n2(r.aProd)}</b></td><td class="num">${n2(r.aReal)}</td><td class="num">${n2(r.aMeta)}</td><td class="num">${r.actuales ?? '—'}</td><td class="num">${r.dif ?? dif(r)}</td></tr>`;
     const T2 = { pct: algun('pct') ? tot('pct') : null, montoMeta: algun('montoMeta') ? tot('montoMeta') : null, creditos: algun('creditos') ? tot('creditos') : null, solic: algun('solic') ? tot('solic') : null,
-      porDia: algun('porDia') ? tot('porDia') : null, aProd: algun('aProd') ? tot('aProd') : null, aReal: algun('aReal') ? tot('aReal') : null, aMeta: algun('aMeta') ? tot('aMeta') : null, actuales: S.C.analistas.length };
+      porDia: algun('porDia') ? tot('porDia') : null, aProd: algun('aProd') ? tot('aProd') : null, aReal: algun('aReal') ? tot('aReal') : null, aMeta: algun('aMeta') ? tot('aMeta') : null, actuales: S.C.analistas.filter((a) => (!a.desde || a.desde <= S.C.hoy) && (!a.hasta || a.hasta >= S.C.hoy)).length };
     T2.dif = dif(T2);
     return `
       <div class="card"><h3>Capacidad instalada del departamento</h3>
