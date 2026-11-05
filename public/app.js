@@ -30,8 +30,8 @@
   const MES3 = MESES.map((m) => m.slice(0, 3));
 
   // ---------- Formato ----------
-  const n0 = (v) => (v == null ? '—' : Math.round(v).toLocaleString('es-NI'));
-  const n2 = (v) => (v == null || !isFinite(v) ? '—' : v.toLocaleString('es-NI', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+  const n0 = (v) => (v == null ? '—' : Math.round(v).toLocaleString('es-SV'));
+  const n2 = (v) => (v == null || !isFinite(v) ? '—' : v.toLocaleString('es-SV', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
   const pct = (v) => (v == null ? '—' : (100 * v).toFixed(1) + '%');
   const dur = (s) => {
     if (s == null) return '—';
@@ -342,16 +342,16 @@
       </div>
       <div class="kpis">
         <div class="kpi"><div class="l">Solicitudes DAC</div><div class="v">${n0(M.depto.n)}</div><div class="s">${n0(M.depto.reestructuras)} reestructuras · ${n2(M.depto.porDia)} por día hábil · ${n0(M.ingresos.length)} ingresaron</div></div>
-        <div class="kpi verde"><div class="l">Productividad del departamento</div><div class="v">${n2(M.depto.prod)}</div><div class="s">ponderada por producto · ${DAC.PRODUCTOS.map((p) => `${p} ${pct(M.depto.peso[p])}`).join(' · ')}</div></div>
+        <div class="kpi verde"><div class="l">Productividad del departamento</div><div class="v">${n2(M.depto.prod)}</div><div class="s">solicitudes ÷ días disponibles · ${DAC.PRODUCTOS.map((p) => `${p} ${pct(M.depto.peso[p])}`).join(' · ')}</div></div>
         <div class="kpi cielo"><div class="l">Tiempo de la solicitud</div><div class="v">${dur(T.mediana)}</div><div class="s">mediana · promedio ${dur(T.prom)}</div></div>
         <div class="kpi lima"><div class="l">Dentro de la meta</div><div class="v">${pct(T.enMeta)}</div><div class="s">${metaTxt()} · ${n0(T.n)} solicitudes</div></div>
         <div class="kpi naranja"><div class="l">Preaprobado condicionado</div><div class="v">${n0(R.n)}</div><div class="s">solicitudes reprocesadas · mediana en análisis ${dur(R.mediana)}</div></div>
-        <div class="kpi blanco"><div class="l">Flujo Rápido (motor)</div><div class="v">${n0(fr.length)}</div><div class="s">sin pasar por un analista · ${n0(fr.filter((x) => x.resolucion === 'PRECALIFICADO MOTOR').length)} aprobadas por motor</div></div>
+        <div class="kpi blanco"><div class="l">Flujo Rápido (motor)</div><div class="v">${n0(fr.length)}</div><div class="s">rechazadas por el motor sin pasar por un analista</div></div>
       </div>
       <div class="grid g2" style="margin-bottom:14px">${DAC.PRODUCTOS.map((p) => { const x = M.porProducto[p], Tp = DAC.resumenTiempos(casos.filter((c) => c.p === p), metas()); return `
         <div class="card"><h3>${prodTag(p)}</h3>
-          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="tit" style="font-size:28px;font-weight:800;color:var(--navy)">${n2(x.prod)}</span><span class="muted small">productividad</span></div>
-          <div class="muted small">${n0(x.n)} solicitudes · ${n2(x.porDia)} por día · ${x.analistas} analistas (${n2(x.equiv)} disponibles)<br>
+          <div style="display:flex;justify-content:space-between;align-items:baseline"><span class="tit" style="font-size:28px;font-weight:800;color:var(--navy)">${n0(x.n)}</span><span class="muted small">solicitudes</span></div>
+          <div class="muted small">${n2(x.porDia)} por día hábil · ${pct(M.depto.peso[p])} del total<br>
             Meta ≤ ${metas()[p]} min: <b>${pct(Tp.enMeta)}</b> dentro · mediana ${dur(Tp.mediana)}</div></div>`; }).join('')}</div>
       <div class="card" style="margin-bottom:14px">${mapa}</div>
       <div class="grid g2">
@@ -360,7 +360,7 @@
           ${GRAF.apiladas(porGrupo, SERIE_META())}</div>
         <div class="card" style="grid-column:1/-1"><h3>Productividad por analista${F ? ` · ${textoFiltro(F)}` : ''}</h3><p class="muted small" style="margin-top:-4px">Solicitudes en que intervino / días disponibles. Cambia con el filtro de día y hora; clic en un analista para filtrar todo el dashboard (incluido el mapa) a sus solicitudes.</p>
           ${GRAF.barras(pa.map((a) => ({ nombre: nomLinea(a), y: a.prod, color: a.preaprobado ? 'var(--naranja)' : COLOR[a.producto],
-            tip: `${esc(nomLinea(a))} (${a.producto})<br>${a.n} solicitudes / ${n2(a.disp)} días = ${n2(a.prod)}<br><i>clic para ${F && F.analista === a.nombre ? 'quitar el filtro del analista' : 'filtrar el dashboard por este analista'}</i>`,
+            tip: `${esc(nomLinea(a))}<br>${a.n} solicitudes / ${n2(a.disp)} días = ${n2(a.prod)}<br><i>clic para ${F && F.analista === a.nombre ? 'quitar el filtro del analista' : 'filtrar el dashboard por este analista'}</i>`,
             clic: filClic(F && F.d1, F && F.d2, F && F.hora, F && F.analista === a.nombre ? '' : a.nombre), sel: F && F.analista === a.nombre })), { fmt: n2 })}
           <div class="leyenda" style="margin-top:8px">${DAC.PRODUCTOS.map((p) => `<span><i style="background:${COLOR[p]};height:10px;width:10px"></i>${p}</span>`).join('')}</div></div>
         <div class="card"><h3>Tiempos de respuesta por mes · ${anio}</h3><p class="muted small" style="margin-top:-4px">Año completo, sin el filtro de día u hora. Clic en un mes para verlo.</p>${evoT}</div>
@@ -414,7 +414,7 @@
     for (const x of lista0) { const k = clave(x) || '(sin analista)'; if (!m.has(k)) m.set(k, []); m.get(k).push(valor(x)); }
     return [...m].map(([k, v]) => ({ k, valores: v })).sort((a, b) => b.valores.length - a.valores.length);
   };
-  const nombreAnalista = (k) => `${esc(titulo(k))}${S.C.esAnalista.has(k) ? ` <span class="muted small">${S.C.productoDe.get(k)}</span>` : ' <span class="muted small">(no es analista)</span>'}`;
+  const nombreAnalista = (k) => `${esc(titulo(k))}${S.C.esAnalista.has(k) ? '' : ' <span class="muted small">(no es analista)</span>'}`;
   // Tramos agrupados por analista, con su detalle
   const gruposTramos = (tr) => agrupar(tr, (t) => t.analista, (t) => t)
     .map((g) => ({ nombre: nombreAnalista(g.k), valores: g.valores.map(S.C.valorTramo), filas: g.valores.map(filaTramo) }));
@@ -572,19 +572,19 @@
     for (const x of fr) porEstado.set(x.ultimo_estado, [...(porEstado.get(x.ultimo_estado) || []), x]);
     const sinDatos = !S.D.motor_resumen.length;
     return `${filtros({ tipo: false })}
-      ${sinDatos ? '<div class="card nota alerta">Los tiempos del motor se llenan con la próxima actualización, después de ejecutar <b>supabase/migracion_2026_10_23b.sql</b> en Supabase.</div>' : ''}
+      ${sinDatos ? '<div class="card nota alerta">Los tiempos del motor se llenan con la próxima actualización.</div>' : ''}
       <div class="kpis">
-        <div class="kpi"><div class="l">Resoluciones del motor</div><div class="v">${n0(T.n)}</div><div class="s">aprobado o rechazado por motor · ${mesTxt(S.mes)}</div></div>
+        <div class="kpi"><div class="l">Resoluciones del motor</div><div class="v">${n0(T.n)}</div><div class="s">rechazadas por motor · ${mesTxt(S.mes)}</div></div>
         <div class="kpi ${T.dentro == null || T.dentro >= 0.999 ? 'verde' : 'naranja'}"><div class="l">Dentro de 1 minuto</div><div class="v">${pct(T.dentro)}</div><div class="s">${n0(T.b[4])} tardaron más de 1 min</div></div>
         <div class="kpi cielo"><div class="l">Tiempo promedio</div><div class="v">${segs(T.prom)}</div><div class="s">de PRE ANALISIS a la resolución · máximo ${segs(T.max)}</div></div>
-        <div class="kpi blanco"><div class="l">Flujo Rápido</div><div class="v">${n0(fr.length)}</div><div class="s">resueltas por el motor sin pasar por un analista</div></div>
+        <div class="kpi blanco"><div class="l">Flujo Rápido</div><div class="v">${n0(fr.length)}</div><div class="s">rechazadas por el motor sin pasar por un analista</div></div>
       </div>
-      <div class="card"><h3>Tiempo promedio del motor por día</h3><p class="muted small" style="margin-top:-4px">Segundos de PRE ANALISIS a PRECALIFICADO / RECHAZADO POR MOTOR. Meta: menos de 1 minuto. No cuenta en los tiempos ni en la productividad del DAC.</p>
+      <div class="card"><h3>Tiempo promedio del motor por día</h3><p class="muted small" style="margin-top:-4px">Segundos de PRE ANALISIS a RECHAZADO POR MOTOR. Meta: menos de 1 minuto. No cuenta en los tiempos ni en la productividad del DAC.</p>
         ${GRAF.columnas(dias, { fmt: (v) => `${(+v).toFixed(1)}`, color: 'var(--navy)' })}</div>
       <div class="grid g2" style="margin-top:14px">
         <div class="card"><h3>Por camino</h3><div class="tabla"><table><thead>${cab}</thead><tbody>
           ${Object.entries(CAMINO).filter(([k]) => k !== 'otro' || MR.some((r) => r.camino === k)).map(([k, t]) => filaM(t, MR.filter((r) => r.camino === k))).join('')}
-          ${['PRECALIFICADO MOTOR', 'RECHAZADO POR MOTOR'].map((e) => filaM(titulo(e), MR.filter((r) => r.resolucion === e))).join('')}</tbody></table></div></div>
+          ${['RECHAZADO POR MOTOR'].map((e) => filaM(titulo(e), MR.filter((r) => r.resolucion === e))).join('')}</tbody></table></div></div>
         <div class="card"><h3>Por producto</h3><div class="tabla"><table><thead>${cab}</thead><tbody>
           ${DAC.PRODUCTOS.map((p) => filaM(prodTag(p), MR.filter((r) => r.producto === p))).join('')}</tbody></table></div></div>
       </div>
@@ -593,8 +593,8 @@
           ${lentas.sort((a, b) => b.segundos - a.segundos).map((x) => `<tr><td>${x.solicitud}</td><td>${prodTag(x.producto)}</td><td>${esc(x.resolucion)}</td><td>${CAMINO[x.camino] || ''}</td><td>${fh(x.fecha_resolucion)}</td><td class="num"><b>${segs(Number(x.segundos))}</b></td></tr>`).join('')}</tbody></table></div>`
           : '<p class="muted">Ninguna resolución del motor pasó de 1 minuto en el mes.</p>'}</div>
       <div class="card"><h3>Flujo Rápido · ${mesTxt(S.mes)}</h3>
-        <p class="muted small">Todas las solicitudes con PRECALIFICADO o RECHAZADO POR MOTOR que no pasaron por POR ASIGNAR A ANALISTA, hayan seguido o no a otro estado (también si la jefatura las pasó a pre análisis). Clic en una cantidad para ver las solicitudes.</p>
-        <p>${['PRECALIFICADO MOTOR', 'RECHAZADO POR MOTOR'].map((e) => { const l = fr.filter((x) => x.resolucion === e); return `${titulo(e)}: <b>${conLista(l.length, `Flujo Rápido · ${titulo(e)}`, l.map(filaFlujo))}</b>`; }).join(' · ')}
+        <p class="muted small">Todas las solicitudes con RECHAZADO POR MOTOR que no pasaron por POR ASIGNAR A ANALISTA, hayan seguido o no a otro estado (también si la jefatura las pasó a pre análisis). Clic en una cantidad para ver las solicitudes.</p>
+        <p>${['RECHAZADO POR MOTOR'].map((e) => { const l = fr.filter((x) => x.resolucion === e); return `${titulo(e)}: <b>${conLista(l.length, `Flujo Rápido · ${titulo(e)}`, l.map(filaFlujo))}</b>`; }).join(' · ')}
           · Total: <b>${conLista(fr.length, 'Flujo Rápido', fr.map(filaFlujo))}</b></p>
         <div class="tabla"><table><thead><tr><th>Estado hoy</th><th class="num">Solicitudes</th><th class="num">%</th></tr></thead><tbody>
           ${[...porEstado].sort((a, b) => b[1].length - a[1].length).map(([e, l]) => `<tr><td>${esc(e)}</td><td class="num">${conLista(l.length, `Flujo Rápido · ${esc(e)}`, l.map(filaFlujo))}</td><td class="num">${pct(l.length / fr.length)}</td></tr>`).join('')}</tbody></table></div></div>`;
@@ -717,14 +717,11 @@
 
     return `${filtros()}
       <div class="card"><h3>Productividad por analista · ${mesTxt(S.mes)}</h3>
-        <p class="muted small">${notaHoy(M)} Cada solicitud cuenta para cada analista que intervino en ella (aunque sea de otro producto). Días disponibles = días hábiles − vacaciones/permisos + eventos especiales asignados.
-          Sin preaprobado + Con preaprobado = solicitudes que analizó. Quien reprocesa el preaprobado condicionado tiene una segunda línea con lo que le llegó solo por el preaprobado; cada línea con su productividad sobre los mismos días disponibles. Clic en una cantidad para ver las solicitudes.</p>
-        <div class="tabla"><table><thead><tr><th>Analista</th><th>Producto</th><th class="num">Solicitudes</th><th class="num">De su producto</th><th class="num">De otros productos</th>
-          <th class="num" data-tip="Las analizó y nunca pasaron por preaprobado condicionado">Sin preaprobado</th><th class="num" data-tip="Las analizó y después pasaron por preaprobado condicionado">Con preaprobado</th><th class="num">Días disponibles</th><th class="num">Productividad</th></tr></thead><tbody>
-        ${filas.map((a) => { const g = grupos(a); return `<tr${a.preaprobado ? ' class="linea-pre"' : ''}><td>${esc(nomLinea(a))}</td><td>${prodTag(a.producto)}</td><td class="num">${n0(a.n)}</td><td class="num">${n0(a.propio)}</td><td class="num">${n0(a.otros)}</td>
-          ${a.preaprobado ? '<td></td><td></td>' : cel(a, g.sinPre, 'su análisis sin preaprobado', `${g.sinPreConPA} de ${g.sinPre.length} pasaron por PRE ANALISIS`) + cel(a, g.conPreA, 'su análisis con preaprobado')}
+        <p class="muted small">${notaHoy(M)} Cada solicitud cuenta para cada analista que intervino en ella; en el departamento, una solicitud con varios analistas cuenta una vez. Días disponibles = días hábiles − vacaciones/permisos + eventos especiales asignados. Clic en una cantidad para ver las solicitudes.</p>
+        <div class="tabla"><table><thead><tr><th>Analista</th><th class="num">Solicitudes</th><th class="num">Días disponibles</th><th class="num">Productividad</th></tr></thead><tbody>
+        ${filas.map((a) => { const g = grupos(a); return `<tr${a.preaprobado ? ' class="linea-pre"' : ''}><td>${esc(nomLinea(a))}</td>${cel(a, g.sinPre, 'su análisis', `${g.sinPreConPA} de ${g.sinPre.length} pasaron por PRE ANALISIS`)}
           <td class="num">${n2(a.disp)}${ausentes(a.nombre) ? ' <span class="muted small" data-tip="Tiene vacaciones o permisos en el mes">✱</span>' : ''}</td><td class="num"><b>${n2(a.prod)}</b></td></tr>`; }).join('')}
-        ${yo ? '' : `<tr class="total"><td>Departamento</td><td></td><td class="num">${n0(M.depto.n)}</td><td colspan="4" class="muted small">solicitudes únicas (una solicitud con varios analistas cuenta una vez)</td><td class="num">${n2(M.depto.disp)}</td><td class="num">${n2(M.depto.prod)}</td></tr>`}
+        ${yo ? '' : `<tr class="total"><td>Departamento</td><td class="num">${n0(M.depto.n)}</td><td class="num">${n2(M.depto.disp)}</td><td class="num">${n2(M.depto.prod)}</td></tr>`}
         </tbody></table></div>
         ${!yo && M.sinConfigurar.length ? `<div class="nota alerta">Intervinieron usuarios que no son analistas: ${M.sinConfigurar.map((x) => `${esc(titulo(x.nombre))} (${x.n})`).join(', ')}. Sus solicitudes y tiempos sí cuentan para el departamento, pero no tienen productividad propia ni suman al número de analistas.</div>` : ''}
       </div>
@@ -737,13 +734,12 @@
     const C = S.C, M = DAC.metricas(C, S.D, d, h, { tipo: S.tipo });
     const tiempoProd = (p) => DAC.resumenTiempos(casosDe(C, M.sols.filter((s) => !p || s.producto === p)), metas());
     const fila = (nom, x, R, peso, cls = '', meta = 'según producto') => `<tr class="${cls}"><td>${nom}</td><td class="num">${n0(x.n)}</td><td class="num">${pct(peso)}</td><td class="num">${n2(M.depto.diasHabiles)}</td><td class="num">${n2(x.porDia)}</td>
-      <td class="num">${x.analistas}</td><td class="num">${n2(x.equiv)}</td><td class="num"><b>${n2(x.prod)}</b></td><td class="num">${dur(R.mediana)}</td><td class="num">${meta}</td><td class="num">${pct(R.enMeta)}</td></tr>`;
+      <td class="num">${x.analistas ?? '—'}</td><td class="num">${n2(x.equiv)}</td><td class="num"><b>${n2(x.prod)}</b></td><td class="num">${dur(R.mediana)}</td><td class="num">${meta}</td><td class="num">${pct(R.enMeta)}</td></tr>`;
     return `${filtros({ producto: false })}
       <div class="card"><h3>Departamento de Análisis · ${mesTxt(S.mes)}</h3>
         <p class="muted small">${notaHoy(M)}</p>
-        <div class="nota">Productividad del producto = solicitudes del producto que pasaron por POR ASIGNAR A ANALISTA y cuentan en el mes (el de su última resolución) ÷ días hábiles ÷ analistas del producto
-          (contados por su disponibilidad: si alguien tuvo vacaciones, cuenta solo por los días que estuvo).
-          Productividad del departamento = promedio de la productividad de cada producto, ponderado por su peso en solicitudes.</div>
+        <div class="nota">Productividad del departamento = solicitudes que pasaron por POR ASIGNAR A ANALISTA y cuentan en el mes (el de su última resolución) ÷ días hábiles ÷ analistas
+          (contados por su disponibilidad: si alguien tuvo vacaciones, cuenta solo por los días que estuvo). Todos los analistas atienden todos los productos, así que no se separa por producto.</div>
         <div class="tabla"><table><thead><tr><th>Producto</th><th class="num">Solicitudes</th><th class="num">Peso</th><th class="num">Días hábiles</th><th class="num">Solicitudes por día</th><th class="num">Analistas</th><th class="num">Analistas disponibles</th><th class="num">Productividad</th><th class="num">Tiempo mediano</th><th class="num">Meta</th><th class="num">En meta</th></tr></thead><tbody>
         ${DAC.PRODUCTOS.map((p) => fila(prodTag(p), M.porProducto[p], tiempoProd(p), M.depto.peso[p], '', `≤ ${metas()[p]} min`)).join('')}
         ${fila('Departamento', M.depto, tiempoProd(null), 1, 'total')}</tbody></table></div>
@@ -794,15 +790,14 @@
     return `${cabeza}
       <div class="card"><h3>Productividad acumulada</h3>
         ${yo ? GRAF.lineas([serie('Mi productividad', 'var(--s-pers)', (r) => r.M.porAnalista.find((a) => a.nombre === yo && !a.preaprobado)?.prod ?? null), serie('Departamento', 'var(--s-pymes)', (r) => r.M.depto.prod)], { fmt: n2 })
-          : GRAF.lineas(S.producto ? [serie(S.producto, COLOR[S.producto], (r) => r.M.porProducto[S.producto].prod)]
-            : [serie('Departamento', 'var(--navy)', (r) => r.M.depto.prod), ...DAC.PRODUCTOS.map((p) => serie(p, COLOR[p], (r) => r.M.porProducto[p].prod))], { fmt: n2 })}
+          : GRAF.lineas([serie('Departamento', 'var(--navy)', (r) => r.M.depto.prod)], { fmt: n2 })}
         <div class="tabla" style="margin-top:10px"><table><thead><tr><th>Período</th><th class="num">Solicitudes</th><th class="num">Días hábiles</th><th class="num">Analistas disp.</th><th class="num">Productividad</th>
-          ${DAC.PRODUCTOS.map((p) => `<th class="num">${p}</th><th class="num" data-tip="Solicitudes ${p} dentro de su meta">≤ ${metas()[p]} min</th>`).join('')}<th class="num">Tiempo mediano</th><th class="num">En meta</th></tr></thead><tbody>
+          ${DAC.PRODUCTOS.map((p) => `<th class="num" data-tip="Solicitudes ${p} dentro de su meta">${p} ≤ ${metas()[p]} min</th>`).join('')}<th class="num">Tiempo mediano</th><th class="num">En meta</th></tr></thead><tbody>
           ${filas.map((r) => `<tr><td>${r.nom}</td><td class="num">${n0(r.M.depto.n)}</td><td class="num">${n2(r.M.depto.diasHabiles)}</td><td class="num">${n2(r.M.depto.equiv)}</td><td class="num"><b>${n2(r.M.depto.prod)}</b></td>
-            ${DAC.PRODUCTOS.map((p) => `<td class="num">${n2(r.M.porProducto[p].prod)}</td><td class="num" data-tip="${n0(r.TP[p].n)} solicitudes con tiempo medido">${pct(r.TP[p].enMeta)}</td>`).join('')}<td class="num">${dur(r.T.mediana)}</td><td class="num">${pct(r.T.enMeta)}</td></tr>`).join('')}
+            ${DAC.PRODUCTOS.map((p) => `<td class="num" data-tip="${n0(r.TP[p].n)} solicitudes con tiempo medido">${pct(r.TP[p].enMeta)}</td>`).join('')}<td class="num">${dur(r.T.mediana)}</td><td class="num">${pct(r.T.enMeta)}</td></tr>`).join('')}
           </tbody></table></div></div>
       <div class="card"><h3>Productividad por analista</h3><div class="tabla"><table><thead><tr><th>Analista</th>${filas.map((r) => `<th class="num">${r.nom}</th>`).join('')}${MT ? `<th class="num">Total ${S.anio}</th>` : ''}</tr></thead><tbody>
-        ${an.map((a) => `<tr${a.preaprobado ? ' class="linea-pre"' : ''}><td>${esc(nomLinea(a))} <span class="muted small">${a.producto}</span></td>${[...prodA, ...(totA ? [totA] : [])].map((m, i) => { const x = m.get(a.clave); const b = i === prodA.length; return `<td class="num" data-tip="${x ? `${x.n} solicitudes / ${n2(x.disp)} días` : ''}">${b ? '<b>' : ''}${n2(x && x.prod)}${b ? '</b>' : ''}</td>`; }).join('')}</tr>`).join('')}
+        ${an.map((a) => `<tr${a.preaprobado ? ' class="linea-pre"' : ''}><td>${esc(nomLinea(a))}</td>${[...prodA, ...(totA ? [totA] : [])].map((m, i) => { const x = m.get(a.clave); const b = i === prodA.length; return `<td class="num" data-tip="${x ? `${x.n} solicitudes / ${n2(x.disp)} días` : ''}">${b ? '<b>' : ''}${n2(x && x.prod)}${b ? '</b>' : ''}</td>`; }).join('')}</tr>`).join('')}
       </tbody></table></div></div>`;
   }
 
@@ -898,9 +893,9 @@
       const r = { p, ingresaron: suma(rows), nCol, montoCol, ticket: nCol ? montoCol / nCol : null,
         colDac: suma(col.filter((r0) => r0.camino === 'dac')), colRapido: suma(col.filter((r0) => r0.camino === 'rapido')),
         tud: suma(rows.filter((r0) => r0.estado.startsWith('TUD'))), rech: suma(rows.filter((r0) => r0.estado.startsWith('RECHAZADO') && r0.estado !== 'RECHAZADO POR MOTOR')),
-        rechMotor: suma(rows.filter((r0) => r0.estado === 'RECHAZADO POR MOTOR')), dacN: x.n, tReal, prodHist: x.prod,
+        rechMotor: suma(rows.filter((r0) => r0.estado === 'RECHAZADO POR MOTOR')), dacN: x.n, tReal, prodHist: M.depto.prod,
         usoReal: tReal != null && x.disp ? (x.n * tReal) / (x.disp * hDiaB * 3600) : null,
-        pctHist: montoTot ? montoCol / montoTot : null, actuales: x.analistas, meta: metas()[p] };
+        pctHist: montoTot ? montoCol / montoTot : null, actuales: null, meta: metas()[p] };
       r.porColocado = nCol ? r.dacN / nCol : null;
       const pctP = cap.pct[p] === '' || cap.pct[p] == null ? r.pctHist : Number(cap.pct[p]) / 100;
       r.pct = pctP;
@@ -921,7 +916,7 @@
     const tot = (k) => K.prods.reduce((t, r) => (r[k] == null ? t : t + r[k]), 0);
     const algun = (k) => K.prods.some((r) => r[k] != null);
     const sumaPct = DAC.PRODUCTOS.reduce((t, p) => t + Number(cap.pct[p] || 0), 0);
-    const dif = (r) => { if (r.aProd == null) return '—'; const v = r.aProd - r.actuales; return Math.abs(v) < 0.05 ? 'justo' : v > 0 ? `<span style="color:var(--rojo)">faltan ${n2(v)}</span>` : `<span style="color:var(--verde-osc)">sobran ${n2(-v)}</span>`; };
+    const dif = (r) => { if (r.aProd == null || r.actuales == null) return '—'; const v = r.aProd - r.actuales; return Math.abs(v) < 0.05 ? 'justo' : v > 0 ? `<span style="color:var(--rojo)">faltan ${n2(v)}</span>` : `<span style="color:var(--verde-osc)">sobran ${n2(-v)}</span>`; };
     const sinBit = !K.BR.length;
     const baseTxt = K.base.map(mesTxt).join(', ');
     const fila = (r, nom, cls = '') => `<tr class="${cls}"><td>${nom}</td><td class="num">${n0(r.ingresaron)}</td><td class="num">${n0(r.nCol)}</td><td class="num">${n0(r.colRapido)}</td><td class="num">${n2(r.ticket)}</td>
@@ -932,7 +927,7 @@
     const fila2 = (r, nom, cls = '') => `<tr class="${cls}"><td>${nom}</td><td class="num">${r.pct == null ? '—' : pct(r.pct)}</td><td class="num">${n2(r.montoMeta)}</td><td class="num">${n0(r.creditos)}</td><td class="num">${n0(r.solic)}</td><td class="num">${n2(r.porDia)}</td>
       <td class="num"><b>${n2(r.aProd)}</b></td><td class="num">${n2(r.aReal)}</td><td class="num">${n2(r.aMeta)}</td><td class="num">${r.actuales ?? '—'}</td><td class="num">${r.dif ?? dif(r)}</td></tr>`;
     const T2 = { pct: algun('pct') ? tot('pct') : null, montoMeta: algun('montoMeta') ? tot('montoMeta') : null, creditos: algun('creditos') ? tot('creditos') : null, solic: algun('solic') ? tot('solic') : null,
-      porDia: algun('porDia') ? tot('porDia') : null, aProd: algun('aProd') ? tot('aProd') : null, aReal: algun('aReal') ? tot('aReal') : null, aMeta: algun('aMeta') ? tot('aMeta') : null, actuales: tot('actuales') };
+      porDia: algun('porDia') ? tot('porDia') : null, aProd: algun('aProd') ? tot('aProd') : null, aReal: algun('aReal') ? tot('aReal') : null, aMeta: algun('aMeta') ? tot('aMeta') : null, actuales: S.C.analistas.length };
     T2.dif = dif(T2);
     return `
       <div class="card"><h3>Capacidad instalada del departamento</h3>
@@ -962,7 +957,7 @@
         <div class="nota"><b>Cómo se calcula</b> (por producto):<br>
           Créditos a colocar = presupuesto × % del producto ÷ ticket promedio.<br>
           Solicitudes DAC = créditos a colocar × solicitudes DAC por cada crédito colocado en el período base (incluye las que terminan en TUD o rechazadas, y descuenta las colocadas por Flujo Rápido).<br>
-          <b>Analistas (productividad)</b> = solicitudes por día hábil ÷ productividad histórica del producto: es la capacidad instalada con el ritmo real de trabajo. La diferencia se mide contra esta columna.<br>
+          <b>Analistas (productividad)</b> = solicitudes por día hábil ÷ productividad histórica del departamento: es la capacidad instalada con el ritmo real de trabajo. La diferencia se mide contra esta columna.<br>
           Analistas (tiempo real / meta) = solicitudes × tiempo por solicitud ÷ (horas de jornada del mes × % de la jornada analizando). La columna <i>Uso de la jornada</i> muestra qué parte de la jornada se fue en análisis medido en el período base.</div></div>`;
   }
 
@@ -1052,7 +1047,7 @@
     const radio = (clave, k, txt) => `<label style="flex-direction:row;align-items:start;gap:6px;font-weight:400;color:var(--texto)"><input type="radio" name="${clave}" value="${k}" ${cfg[clave] === k ? 'checked' : ''}><span>${txt}</span></label>`;
     return `
       <div class="card"><h3>Analistas y producto asignado</h3>
-        <p class="muted small">El nombre debe ser igual al que aparece en el sistema. El producto define con quién se divide la productividad del producto; el analista igual puede atender otros productos.</p>
+        <p class="muted small">El nombre debe ser igual al que aparece en el sistema. Todos los analistas atienden todos los productos: el producto de esta lista no cambia la productividad.</p>
         <div class="tabla"><table><thead><tr><th>Analista</th><th>Producto</th><th>Activo</th><th>Desde</th><th>Hasta</th><th></th></tr></thead><tbody>
         ${(S.D.analistas || []).map((a) => `<tr data-analista="${esc(a.nombre)}"><td>${esc(titulo(a.nombre))}</td><td><select name="producto">${opProd(a.producto)}</select></td>
           <td><input type="checkbox" name="activo" ${a.activo !== false ? 'checked' : ''}></td><td><input type="date" name="desde" value="${a.desde || ''}"></td><td><input type="date" name="hasta" value="${a.hasta || ''}"></td>

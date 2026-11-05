@@ -494,7 +494,7 @@ begin
   return n;
 end $$;
 
--- ---------- Feriados de El Salvador (no se reponen si caen domingo) ----------
+-- ---------- Feriados nacionales de El Salvador (no se reponen si caen domingo) ----------
 insert into dac_sv.dac_feriados (fecha, valor, descripcion) values
   ('2026-01-01', 0, 'Año Nuevo'),
   ('2026-04-02', 0, 'Jueves Santo'),
@@ -503,8 +503,6 @@ insert into dac_sv.dac_feriados (fecha, valor, descripcion) values
   ('2026-05-01', 0, 'Día del Trabajo'),
   ('2026-05-10', 0, 'Día de la Madre'),
   ('2026-06-17', 0, 'Día del Padre'),
-  ('2026-08-03', 0, 'Fiestas Patronales de San Salvador'),
-  ('2026-08-05', 0, 'Fiestas Patronales de San Salvador'),
   ('2026-08-06', 0, 'Divino Salvador del Mundo'),
   ('2026-09-15', 0, 'Día de la Independencia'),
   ('2026-11-02', 0, 'Día de los Difuntos'),
@@ -516,8 +514,6 @@ insert into dac_sv.dac_feriados (fecha, valor, descripcion) values
   ('2027-05-01', 0, 'Día del Trabajo'),
   ('2027-05-10', 0, 'Día de la Madre'),
   ('2027-06-17', 0, 'Día del Padre'),
-  ('2027-08-03', 0, 'Fiestas Patronales de San Salvador'),
-  ('2027-08-05', 0, 'Fiestas Patronales de San Salvador'),
   ('2027-08-06', 0, 'Divino Salvador del Mundo'),
   ('2027-09-15', 0, 'Día de la Independencia'),
   ('2027-11-02', 0, 'Día de los Difuntos'),

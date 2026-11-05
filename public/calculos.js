@@ -21,7 +21,7 @@
     const mes = Math.floor((h + l - 7 * m + 114) / 31), dia = ((h + l - 7 * m + 114) % 31) + 1;
     return new Date(y, mes - 1, dia);
   }
-  // Propuesta de feriados del año. En El Salvador son inamovibles: si caen domingo no se reponen.
+  // Propuesta de feriados nacionales del año (los locales no cuentan). En El Salvador son inamovibles: si caen domingo no se reponen.
   function feriadosPropuestos(y) {
     const p = pascua(y);
     const base = [
@@ -32,8 +32,6 @@
       [`${y}-05-01`, 'Día del Trabajo'],
       [`${y}-05-10`, 'Día de la Madre'],
       [`${y}-06-17`, 'Día del Padre'],
-      [`${y}-08-03`, 'Fiestas Patronales de San Salvador'],
-      [`${y}-08-05`, 'Fiestas Patronales de San Salvador'],
       [`${y}-08-06`, 'Divino Salvador del Mundo'],
       [`${y}-09-15`, 'Día de la Independencia'],
       [`${y}-11-02`, 'Día de los Difuntos'],
@@ -184,22 +182,19 @@
     const dh = C.diasHabiles(desde, hasta);
 
     // Departamento y producto
+    // En El Salvador todos los analistas atienden todos los productos: una sola productividad, sin separar por producto
+    const dispTotal = C.analistas.reduce((t, a) => t + C.disponibilidad(a.nombre, desde, hasta, false), 0);
     const porProducto = {};
     for (const p of PRODUCTOS) {
       const n = sols.filter((s) => s.producto === p).length;
-      const an = C.analistas.filter((a) => a.producto === p);
-      const disp = an.reduce((t, a) => t + C.disponibilidad(a.nombre, desde, hasta, false), 0);
-      porProducto[p] = { n, analistas: an.length, disp, equiv: dh ? disp / dh : 0, prod: disp ? n / disp : null, porDia: dh ? n / dh : null };
+      porProducto[p] = { n, analistas: null, disp: dispTotal, equiv: null, prod: null, porDia: dh ? n / dh : null };
     }
-    const dispTotal = C.analistas.reduce((t, a) => t + C.disponibilidad(a.nombre, desde, hasta, false), 0);
     const depto = { n: sols.length, reestructuras: sols.filter((s) => s.reestructura).length, diasHabiles: dh,
       diasMes: C.diasHabilesTotales(desde, hasta), analistas: C.analistas.length, disp: dispTotal,
       equiv: dh ? dispTotal / dh : 0, porDia: dh ? sols.length / dh : null, prod: null, peso: {} };
-    // Productividad del departamento: promedio de la productividad de cada producto, ponderado por su peso en solicitudes
-    const conProd = PRODUCTOS.filter((p) => porProducto[p].prod != null);
-    const nPond = conProd.reduce((t, p) => t + porProducto[p].n, 0);
-    for (const p of PRODUCTOS) depto.peso[p] = nPond && porProducto[p].prod != null ? porProducto[p].n / nPond : 0;
-    if (nPond) depto.prod = conProd.reduce((t, p) => t + porProducto[p].prod * depto.peso[p], 0);
+    // Productividad del departamento: solicitudes ÷ días disponibles de los analistas
+    for (const p of PRODUCTOS) depto.peso[p] = sols.length ? porProducto[p].n / sols.length : 0;
+    if (dispTotal) depto.prod = sols.length / dispTotal;
 
     // Por analista: cada solicitud cuenta para cada analista que intervino (aunque sea de otro producto)
     const part = new Map();

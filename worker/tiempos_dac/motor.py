@@ -26,8 +26,9 @@ EN_ANALISIS = "EN ANALISIS"
 PENDIENTES = "PENDIENTES"
 PRE_ANALISIS = "PRE ANALISIS"
 PREAPROBADO = "PREAPROBADO CONDICIONADO"
-# En El Salvador el motor aprueba con PRECALIFICADO MOTOR; no existen APROBADO POR MOTOR ni ENVIADO
-MOTOR = {"PRECALIFICADO MOTOR", "RECHAZADO POR MOTOR"}
+# En El Salvador el motor solo rechaza. PRECALIFICADO MOTOR no es una resolución: la solicitud sigue hacia el analista,
+# y su productividad y tiempo (desde ANALISTA ASIGNADO) son del analista. No existen APROBADO POR MOTOR ni ENVIADO.
+MOTOR = {"RECHAZADO POR MOTOR"}
 # Decisiones que cierran el ciclo del analista (RECHAZADO POR RECEPCION / RESOLUCION: indicado por el usuario 22-oct)
 DECISION = {"APROBADO POR ANALISTA", "RECHAZADO POR ANALISTA", "RECHAZADO POR RECEPCION", "RECHAZADO RESOLUCION"}
 
@@ -97,10 +98,11 @@ def _tramo(sol, tipo, analista, filas, i0, i1, fin_estado, jornada):
 
 def _quien(filas: list[dict], ana: tuple[str, int], i1: int | None) -> str:
     """Analista del tramo: quien lo trabaja (primer EN ANALISIS o la decisión), no quien asignó.
-    De enero a abril 2026 la jefatura registraba ANALISTA ASIGNADO y el analista hacía el análisis."""
+    De enero a abril 2026 la jefatura registraba ANALISTA ASIGNADO y el analista hacía el análisis.
+    RECHAZADO RESOLUCION es de la gerencia, que no es analista: el tramo no queda a su nombre."""
     fin = len(filas) if i1 is None else i1 + 1
     for g in filas[ana[1] + 1:fin]:
-        if g["estado"] == EN_ANALISIS or g["estado"] in DECISION:
+        if g["estado"] == EN_ANALISIS or (g["estado"] in DECISION and g["estado"] != "RECHAZADO RESOLUCION"):
             return g["usuario"]
     return ana[0]
 
@@ -301,7 +303,7 @@ def _resolucion_motor(g: pd.DataFrame):
 
 def flujo_rapido(historico: pd.DataFrame, bitacora: pd.DataFrame, jornada: Jornada | None = None,
                  ahora: datetime | None = None, personal: set[str] | None = None) -> pd.DataFrame:
-    """Flujo Rápido (motor de decisiones): toda solicitud con resolución del motor (aprobado o rechazado por motor)
+    """Flujo Rápido (motor de decisiones): toda solicitud RECHAZADO POR MOTOR
     que no pasó por POR ASIGNAR A ANALISTA, haya seguido o no a otro estado (indicado por el usuario 29-oct; antes
     se exigía un estado posterior). Es del motor aunque la jefatura haya intervenido (indicado por el usuario 23-oct);
     no cuenta en los tiempos ni en la productividad del DAC."""
@@ -338,7 +340,7 @@ LIMITE_MOTOR = 60  # el motor no debe tardar más de 1 minuto en resolver
 
 
 def tiempos_motor(historico: pd.DataFrame, bitacora: pd.DataFrame, dac: set[int], rapido: set[int]):
-    """Tiempo del motor (de PRE ANALISIS a PRECALIFICADO / RECHAZADO POR MOTOR) de todas las solicitudes que resolvió.
+    """Tiempo del motor (de PRE ANALISIS a RECHAZADO POR MOTOR) de todas las solicitudes que resolvió.
     Devuelve (resumen por día, producto, resolución y camino; solicitudes que pasaron de 1 minuto)."""
     h = _historico(historico)
     info = _info(bitacora)
